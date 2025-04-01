@@ -1,5 +1,9 @@
 ### CST8265 - Web Security Basics :lock: :computer:
 
+### dump database
+
+docker exec db /usr/bin/mysqldump -u root -p cst8256proposal > backup_20250329.sql
+
 ### Final proposal project
 
 ## Introduction chapter
@@ -37,7 +41,7 @@ In order to make a stored (stored in db) XSS attack:
 ```js
  <script>alert(document.cookie);</script>
  ```
-- Password: test@2025
+- Password: Test@2025
 
 2. Login as the infected user (testXss)
 

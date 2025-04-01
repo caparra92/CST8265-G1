@@ -20,6 +20,8 @@ function ValidateName($name, &$errors) {
     if(empty($name)) {$errors['name'] = 'Name cannot be empty';}
 }
 
+
+
 function ValidatePassword($password, &$errors, $isSignUp) {
     if(empty($password)) {
         $errors['password'] = 'Password cannot be empty';

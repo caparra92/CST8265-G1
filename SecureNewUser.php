@@ -10,7 +10,6 @@ include_once 'Functions.php';
 include 'Validations.php';
 
 extract($_POST);
-
 if(isset($submit)) {
     try {
         if(isset($studentId)) { ValidateStudentId($studentId, $errors, true);}
@@ -18,10 +17,10 @@ if(isset($submit)) {
         if(isset($phoneNumber)) { ValidatePhone($phoneNumber, $errors);}
         if(isset($password)) { ValidatePassword($password, $errors, true);}
         if(isset($passwordConfirm)) { ValidatePasswordConfirm($password, $passwordConfirm, $errors);}
-        
+        // var_dump($errors);
         if(empty($errors)) {
             $student = addSecureStudent($studentId, $name, $phoneNumber, $password, $email);
-            header("Location: Login.php");
+            header("Location: SecureLogin.php");
             exit();
         }
     }
@@ -99,7 +98,7 @@ include("./include/Header.php");
                         >
                     </div>
                     <span class="text-danger col-sm-3">
-                        <? if (isset($errors['email'])) {echo $errors['email'];} ?>
+                        <? if (isset($errors['phoneNumber'])) {echo $errors['phoneNumber'];} ?>
                     </span>
                 </div>
                 <div class="form-group row">

@@ -94,8 +94,7 @@ function addSecureStudent($studentId, $name, $phone, $password, $email )
         $pdo = getPDO();
         $password = password_hash($password, PASSWORD_DEFAULT);
         $sql = "INSERT INTO Student (StudentId, Name, Phone, Password, Email) VALUES( '$studentId', '$name', '$phone', '$password', '$email')";
-        // echo "DEBUG SQL: $sql";
-        // exit();
+        // var_dump($sql);
         $pdoStmt = $pdo->query($sql);
     } catch (PDOException $ex) {
         die("Database error: " . $ex->getMessage());
@@ -109,6 +108,8 @@ function addInsecureStudent($studentId, $name, $phone, $email, $password)
         $password = password_hash($password, PASSWORD_DEFAULT);
         $sql = "INSERT INTO Student (StudentId, Name, Phone, Password, Email) 
                 VALUES ('$studentId', '$name', '$phone', '$password', '$email')";
+        // echo "DEBUG SQL: $sql";
+        // exit();
         $pdo->exec($sql);
     } catch (PDOException $ex) {
         die("Database error: " . $ex->getMessage());

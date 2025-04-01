@@ -20,8 +20,8 @@ if(isset($submit)) {
         if(isset($passwordConfirm)) { ValidatePasswordConfirm($password, $passwordConfirm, $errors);}
         
         if(empty($errors)) {
-            $student = addSecureStudent($studentId, $name, $phoneNumber, $password, $email);
-            header("Location: Login.php");
+            $student = addInsecureStudent($studentId, $name, $phoneNumber, $password, $email);
+            header("Location: InsecureLogin.php");
             exit();
         }
     }
