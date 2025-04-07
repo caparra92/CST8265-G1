@@ -2,174 +2,120 @@
 if (session_status() === PHP_SESSION_NONE) {
     session_start();
 }
+
 ini_set('display_errors', 1);
 ini_set('display_startup_errors', 1);
 error_reporting(E_ALL);
+
 include_once './Models/Student.php'; 
 include_once 'Functions.php';
-include 'Validations.php';
 
 extract($_POST);
 
-if(isset($submit)) {
+if (isset($submit)) {
     try {
-        if(isset($studentId)) { ValidateStudentId($studentId, $errors, true);}
-        if(isset($name)) { ValidateName($name, $errors);}
-        if(isset($phoneNumber)) { ValidatePhone($phoneNumber, $errors);}
-        if(isset($password)) { ValidatePassword($password, $errors, true);}
-        if(isset($passwordConfirm)) { ValidatePasswordConfirm($password, $passwordConfirm, $errors);}
-        
-        if(empty($errors)) {
+        // No validations for insecure user flow
+        if (empty($errors)) {
             $student = addInsecureStudent($studentId, $name, $phoneNumber, $password, $email);
             header("Location: InsecureLogin.php");
             exit();
         }
-    }
-    catch(Exception $ex) {
+    } catch (Exception $ex) {
         die('System currently not available, try again later');
     }
-    
 }
-
 
 include("./include/Header.php"); 
 ?>
-<div class="container">
-    <div class="row">
-        <h1 class="text-left">Sign Up</h1>
-        <p>All fields are required</p>
-        <div class="col-md-8">
-            <form method="post" class="form row">
-                <div class="form-group row">
-                    <label class="col-sm-2 col-form-label" for="studentId">Student ID:</label>
-                    <div class="col-sm-7">
-                        <input
-                        class="form-control" 
-                        type="text" 
-                        name="studentId" 
-                        id="studentId"
-                        value="<? if (isset($_SESSION['studentId'])) { 
-                                    echo $_SESSION['studentId'];
-                                } else if (isset($studentId)) {
-                                    echo $studentId;
-                                }
-                                ?>"
-                        >
-                    </div>
-                    <span class="text-danger col-sm-3">
-                        <? if (isset($errors['studentId'])) {echo $errors['studentId'];} ?>
-                    </span>
-                </div>
-                <div class="form-group row">
-                    <label class="col-sm-2 col-form-label" for="name">Name</label>
-                    <div class="col-sm-7">
-                        <input
-                        class="form-control" 
-                        type="text" 
-                        name="name" 
-                        id="name"
-                        value="<? if (isset($_SESSION['name'])) { 
-                                    echo $_SESSION['name'];
-                                } else if (isset($name)) {
-                                    echo $name;
-                                }
-                                ?>"
-                        >
-                    </div>
-                    <span class="text-danger col-sm-3">
-                        <? if (isset($errors['name'])) {echo $errors['name'];} ?>
-                    </span>
-                </div>
-                <div class="form-group row">
-                    <label class="col-sm-2 col-form-label" for="phoneNumber">Phone Number</label>
-                    <div class="col-sm-7">
-                        <input
-                        class="form-control" 
-                        type="text" 
-                        name="phoneNumber" 
-                        id="phoneNumber" 
-                        placeholder="xxx-xxx-xxxx"
-                        value=<? 
-                                if (isset($_SESSION['phoneNumber'])) { 
-                                    echo $_SESSION['phoneNumber'];
-                                } else if (isset($phoneNumber)) {
-                                    echo $phoneNumber;
-                                }
-                        ?>
-                        >
-                    </div>
-                    <span class="text-danger col-sm-3">
-                        <? if (isset($errors['email'])) {echo $errors['email'];} ?>
-                    </span>
-                </div>
-                <div class="form-group row">
-                    <label class="col-sm-2 col-form-label" for="email">Email</label>
-                    <div class="col-sm-7">
-                        <input
-                        class="form-control" 
-                        type="email" 
-                        name="email" 
-                        id="email" 
-                        placeholder="xxx@test.com"
-                        value=<? 
-                                if (isset($_SESSION['email'])) { 
-                                    echo $_SESSION['email'];
-                                } else if (isset($email)) {
-                                    echo $email;
-                                }
-                        ?>
-                        >
-                    </div>
-                    <span class="text-danger col-sm-3">
-                        <? if (isset($errors['email'])) {echo $errors['email'];} ?>
-                    </span>
-                </div>
-                <div class="form-group row">
-                    <label class="col-sm-2 col-form-label" for="password">Password</label>
-                    <div class="col-sm-7">
-                        <input
-                        class="form-control" 
-                        type="password" 
-                        name="password" 
-                        id="password"
-                        value="<? 
-                                if (isset($_SESSION['password'])) { 
-                                    echo trim($_SESSION['password']);
-                                } else if (isset($password)) {
-                                    echo $password;
-                                }
-                        ?>"
-                        >
-                    </div>
-                    <span class="text-danger col-sm-3">
-                        <? if (isset($errors['password'])) {echo $errors['password'];} ?>
-                    </span>
-                </div>
-                <div class="form-group row">
-                    <label class="col-sm-2 col-form-label" for="passwordConfirm">Confirm Password</label>
-                    <div class="col-sm-7">
-                        <input
-                        class="form-control" 
-                        type="password" 
-                        name="passwordConfirm" 
-                        id="passwordConfirm"
-                        value="<? 
-                                if (isset($_SESSION['passwordConfirm'])) { 
-                                    echo trim($_SESSION['passwordConfirm']);
-                                } else if (isset($passwordConfirm)) {
-                                    echo $passwordConfirm;
-                                }
-                        ?>"
-                        >
-                    </div>
-                    <span class="text-danger col-sm-3">
-                        <? if (isset($errors['passwordConfirm'])) {echo $errors['passwordConfirm'];} ?>
-                    </span>
-                </div>
+
+<style>
+    /* Center the form vertically and horizontally */
+    .login-container {
+        min-height: 80vh;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+    }
+
+    /* Style the sign-up box */
+    .login-box {
+        background-color: #ffffff;
+        padding: 30px;
+        border-radius: 8px;
+        box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+        border: 1px solid #e0e0e0; /* Light grey border */
+        width: 100%;
+        max-width: 500px;
+    }
+
+    .login-box h1 {
+        margin-bottom: 20px;
+    }
+
+    .login-box p {
+        margin-bottom: 20px;
+    }
+</style>
+
+<div class="container login-container">
+    <div class="login-box">
+
+        <h1 class="text-center">Sign Up (Insecure)</h1>
+        <p class="text-center">All fields are required (No validation applied)</p>
+
+        <form method="post">
+
+            <!-- Student ID -->
+            <div class="form-group">
+                <label for="studentId">Student ID:</label>
+                <input type="text" name="studentId" id="studentId" class="form-control"
+                    value="<?php echo isset($studentId) ? htmlspecialchars($studentId) : ''; ?>">
+            </div>
+
+            <!-- Name -->
+            <div class="form-group">
+                <label for="name">Name:</label>
+                <input type="text" name="name" id="name" class="form-control"
+                    value="<?php echo isset($name) ? htmlspecialchars($name) : ''; ?>">
+            </div>
+
+            <!-- Phone Number -->
+            <div class="form-group">
+                <label for="phoneNumber">Phone Number:</label>
+                <input type="text" name="phoneNumber" id="phoneNumber" class="form-control" placeholder="xxx-xxx-xxxx"
+                    value="<?php echo isset($phoneNumber) ? htmlspecialchars($phoneNumber) : ''; ?>">
+            </div>
+
+            <!-- Email -->
+            <div class="form-group">
+                <label for="email">Email:</label>
+                <input type="email" name="email" id="email" class="form-control" placeholder="xxx@test.com"
+                    value="<?php echo isset($email) ? htmlspecialchars($email) : ''; ?>">
+            </div>
+
+            <!-- Password -->
+            <div class="form-group">
+                <label for="password">Password:</label>
+                <input type="password" name="password" id="password" class="form-control"
+                    value="<?php echo isset($password) ? htmlspecialchars($password) : ''; ?>">
+            </div>
+
+            <!-- Confirm Password -->
+            <div class="form-group">
+                <label for="passwordConfirm">Confirm Password:</label>
+                <input type="password" name="passwordConfirm" id="passwordConfirm" class="form-control"
+                    value="<?php echo isset($passwordConfirm) ? htmlspecialchars($passwordConfirm) : ''; ?>">
+            </div>
+
+            <!-- Buttons -->
+            <div class="form-group text-center mt-4">
                 <button type="submit" id="submit" class="btn btn-success" name="submit">Submit</button>
-                <button type="button" id="clear" class="btn btn-success" name="clear">Clear</button>
-            </form>
-        </div>
+                <button type="reset" id="clear" class="btn btn-secondary">Clear</button>
+            </div>
+
+        </form>
+
     </div>
 </div>
-<? include("./include/Footer.php"); ?>
+
+<?php include("./include/Footer.php"); ?>

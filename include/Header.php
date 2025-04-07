@@ -11,7 +11,7 @@ if (session_status() === PHP_SESSION_NONE) {
         <meta charset="utf-8"> 
         <meta name="viewport" content="width=device-width, initial-scale=1">
         <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@3.3.6/dist/css/bootstrap.min.css">
-        <link rel="stylesheet" href="./include/css/styles.css">
+        <link rel="stylesheet" href="/include/css/styles.css">
         <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 </head>
 <body style="padding-top: 50px; margin-bottom: 60px;">
