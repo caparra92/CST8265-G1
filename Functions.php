@@ -1,8 +1,50 @@
 <?php
 include_once './Models/Student.php';
 
-extract($_POST);
+// Don't extract POST data globally - it's a security risk
+// extract($_POST);
 $errors = array();
+
+// Function for audit logging
+function logUserAction($action, $userId) {
+    try {
+        $timestamp = date('Y-m-d H:i:s');
+        $ipAddress = $_SERVER['REMOTE_ADDR'];
+        $userAgent = $_SERVER['HTTP_USER_AGENT'];
+        
+        $pdo = getPDO();
+        $sql = "INSERT INTO AuditLog (Timestamp, UserId, Action, IPAddress, UserAgent) 
+                VALUES (:timestamp, :userId, :action, :ipAddress, :userAgent)";
+        
+        $stmt = $pdo->prepare($sql);
+        $stmt->bindParam(':timestamp', $timestamp, PDO::PARAM_STR);
+        $stmt->bindParam(':userId', $userId, PDO::PARAM_STR);
+        $stmt->bindParam(':action', $action, PDO::PARAM_STR);
+        $stmt->bindParam(':ipAddress', $ipAddress, PDO::PARAM_STR);
+        $stmt->bindParam(':userAgent', $userAgent, PDO::PARAM_STR);
+        
+        $stmt->execute();
+    } catch (PDOException $ex) {
+        // Silent failure for logs - don't disrupt the user experience
+        error_log("Failed to log action: " . $ex->getMessage());
+    }
+}
+
+// Generate anti-CSRF token
+function generateCSRFToken() {
+    if (empty($_SESSION['csrf_token'])) {
+        $_SESSION['csrf_token'] = bin2hex(random_bytes(32));
+    }
+    return $_SESSION['csrf_token'];
+}
+
+// Verify anti-CSRF token
+function verifyCSRFToken($token) {
+    if (!isset($_SESSION['csrf_token']) || $token !== $_SESSION['csrf_token']) {
+        return false;
+    }
+    return true;
+}
 
 function getPDO() {
 
@@ -41,29 +83,44 @@ function getInsecureStudentId($studentId) {
 }
 
 function getSecureStudent($studentId, $password) {
-    
-    $pdo = getPDO();
-    $passSql = "SELECT Password FROM Student WHERE StudentId = '$studentId'";
-    $resultSetPass = $pdo->query($passSql);
-    $passRow = $resultSetPass->fetch(PDO::FETCH_ASSOC);
-    if ($passRow) {
-        $hash = $passRow['Password'];
-        if (password_verify($password, $hash)) {
-            $sql = "SELECT StudentId, Name, Phone, Email FROM Student WHERE StudentId = '$studentId' AND Password = '$hash'";
-            $resultSet = $pdo->query($sql);
-            if($resultSet) {
-                $row = $resultSet->fetch(PDO::FETCH_ASSOC);
+    try {
+        $pdo = getPDO();
+        
+        // Use prepared statement for the initial password query
+        $passSql = "SELECT Password FROM Student WHERE StudentId = :studentId";
+        $stmt = $pdo->prepare($passSql);
+        $stmt->bindParam(':studentId', $studentId, PDO::PARAM_STR);
+        $stmt->execute();
+        
+        $passRow = $stmt->fetch(PDO::FETCH_ASSOC);
+        if ($passRow) {
+            $hash = $passRow['Password'];
+            // Verify password with password_verify
+            if (password_verify($password, $hash)) {
+                // Use prepared statement for the user data query
+                $sql = "SELECT StudentId, Name, Phone, Email FROM Student WHERE StudentId = :studentId";
+                $stmt = $pdo->prepare($sql);
+                $stmt->bindParam(':studentId', $studentId, PDO::PARAM_STR);
+                $stmt->execute();
+                
+                $row = $stmt->fetch(PDO::FETCH_ASSOC);
                 if($row) {
+                    // Log successful login
+                    logUserAction('User login', $studentId);
                     return new Student($row['StudentId'], $row['Name'], $row['Phone'], $row['Email']);
                 } else {
                     return null;
                 }
             } else {
-                throw new Exception("Query failed!, SQL statement: $sql");
+                // Log failed login attempt
+                logUserAction('Failed login attempt', $studentId);
+                return null;
             }
-        } else {
-            return null;
         }
+        return null;
+    } catch (PDOException $ex) {
+        error_log("Database error during login: " . $ex->getMessage());
+        throw new Exception("Authentication system unavailable");
     }
 }
 
@@ -88,16 +145,35 @@ function getInsecureStudent($studentId, $password) {
     return null;
 }
 
-function addSecureStudent($studentId, $name, $phone, $password, $email )
+function addSecureStudent($studentId, $name, $phone, $password, $email)
 {
     try {
         $pdo = getPDO();
-        $password = password_hash($password, PASSWORD_DEFAULT);
-        $sql = "INSERT INTO Student (StudentId, Name, Phone, Password, Email) VALUES( '$studentId', '$name', '$phone', '$password', '$email')";
-        // var_dump($sql);
-        $pdoStmt = $pdo->query($sql);
+        // Use PASSWORD_BCRYPT explicitly as requested
+        $password = password_hash($password, PASSWORD_BCRYPT);
+        
+        // Use prepared statements with parameters to prevent SQL injection
+        $sql = "INSERT INTO Student (StudentId, Name, Phone, Password, Email) VALUES(:studentId, :name, :phone, :password, :email)";
+        $stmt = $pdo->prepare($sql);
+        
+        // Bind parameters
+        $stmt->bindParam(':studentId', $studentId, PDO::PARAM_STR);
+        $stmt->bindParam(':name', $name, PDO::PARAM_STR);
+        $stmt->bindParam(':phone', $phone, PDO::PARAM_STR);
+        $stmt->bindParam(':password', $password, PDO::PARAM_STR);
+        $stmt->bindParam(':email', $email, PDO::PARAM_STR);
+        
+        // Execute the statement
+        $stmt->execute();
+        
+        // Audit logging
+        logUserAction('New user registration', $studentId);
+        
+        return true;
     } catch (PDOException $ex) {
-        die("Database error: " . $ex->getMessage());
+        // Generic error message to avoid exposing technical details
+        error_log("Database error during registration: " . $ex->getMessage());
+        return false;
     }
 }
 
